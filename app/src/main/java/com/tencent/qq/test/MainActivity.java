@@ -23,8 +23,16 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+
+import java.io.IOException;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -36,9 +44,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private CheckBox cb_assist;
     private CheckBox cb_window;
     private CheckBox cb_people_nearby;
-    private Button btn_phone;
+    private Button btn_get_message, btn_phone;
     private Button btn_start_qq;
     private List<String> phoneList;
+    private MessageBean messageBean;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             cb_people_nearby.setOnCheckedChangeListener(this);
         }
         btn_phone = findViewById(R.id.btn_phone);
+        btn_get_message = findViewById(R.id.btn_get_message);
         btn_start_qq = findViewById(R.id.btn_start_qq);
         if (btn_phone != null) {
             btn_phone.setOnClickListener(new View.OnClickListener() {
@@ -88,6 +98,45 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
             });
         }
+        if (btn_get_message != null) {
+            btn_get_message.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    run("http://47.97.122.20:7012/qq/getSendMessage?sort=1401");
+                }
+            });
+        }
+    }
+
+
+    private void run(String url) {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        final Request request = new Request.Builder()
+                .url(url)
+                .get()//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "onFailure: ");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.body() != null) {
+                    Log.e(TAG, "onResponse: " + response.body().string());
+                    messageBean = JSON.parseObject(response.body().toString(), MessageBean.class);
+                    Log.e(TAG, "onResponse: " + messageBean.getMessage());
+//                    Log.e(TAG, "onResponse: " + response.body().string());
+//                    Gson gson = new Gson();
+//                    messageBean = gson.fromJson(response.body().toString(), MessageBean.class);
+//
+//                    Log.e(TAG, "onResponse: " + messageBean.getMessage());
+                }
+            }
+        });
+
 
     }
 

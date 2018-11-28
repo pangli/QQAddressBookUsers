@@ -29,6 +29,14 @@
             android:padding="10dp"/>
 
         <Button
+            android:id="@+id/btn_get_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="点击获取消息内容"
+            android:textColor="@android:color/holo_red_dark"
+            />
+
+        <Button
             android:id="@+id/btn_phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
