@@ -33,6 +33,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -124,15 +125,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.body() != null) {
-                    Log.e(TAG, "onResponse: " + response.body().string());
-                    messageBean = JSON.parseObject(response.body().toString(), MessageBean.class);
+                ResponseBody responseBody = response.body();
+                if (responseBody != null) {
+                    String message = responseBody.string();
+                    Log.e(TAG, "onResponse: " + message);
+                    messageBean = JSON.parseObject(message, MessageBean.class);
                     Log.e(TAG, "onResponse: " + messageBean.getMessage());
-//                    Log.e(TAG, "onResponse: " + response.body().string());
-//                    Gson gson = new Gson();
-//                    messageBean = gson.fromJson(response.body().toString(), MessageBean.class);
-//
-//                    Log.e(TAG, "onResponse: " + messageBean.getMessage());
                 }
             }
         });

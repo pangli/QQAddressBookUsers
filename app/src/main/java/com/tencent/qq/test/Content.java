@@ -14,18 +14,18 @@ public class Content {
      * del : 0
      */
 
-    private String id;
+    private int id;
     private String sendMessage;
     private String pictureUrl;
     private long createTime;
     private long updateTime;
-    private String del;
+    private int del;
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -61,11 +61,11 @@ public class Content {
         this.updateTime = updateTime;
     }
 
-    public String getDel() {
+    public int getDel() {
         return del;
     }
 
-    public void setDel(String del) {
+    public void setDel(int del) {
         this.del = del;
     }
 }

@@ -12,15 +12,15 @@ public class ContentBean {
      * "pictureUrl":"","createTime":1543330106000,"updateTime":1543330108000,"del":0}
      */
 
-    private String code;
+    private int code;
     private String message;
     private Content content;
 
-    public String getCode() {
+    public int getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(int code) {
         this.code = code;
     }
 
