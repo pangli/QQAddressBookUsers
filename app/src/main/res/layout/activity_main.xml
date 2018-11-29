@@ -25,7 +25,7 @@
             android:id="@+id/edit_send_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="请输入要发送的信息"
+            android:hint="请输入要发送信息的sort"
             android:padding="10dp"/>
 
         <Button

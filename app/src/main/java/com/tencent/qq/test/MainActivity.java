@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -49,11 +51,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private Button btn_start_qq;
     private List<String> phoneList;
     private MessageBean messageBean;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mContext = this;
         edit_send_message = findViewById(R.id.edit_send_message);
         cb_assist = findViewById(R.id.cb_assist_permission);
         if (cb_assist != null) {
@@ -82,18 +86,23 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn_start_qq.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String content = edit_send_message.getText().toString();
-                    if (!TextUtils.isEmpty(content)) {
-                        AutoService.sendContent = content;
+                    if (messageBean != null) {
+                        String sendMessage = messageBean.getContent().getContent().getSendMessage();
+                        if (!TextUtils.isEmpty(sendMessage)) {
+                            AutoService.sendContent = sendMessage;
+                        } else {
+                            Toast.makeText(mContext, "请先获取需要发送的消息内容", Toast.LENGTH_LONG).show();
+                            return;
+                        }
                     } else {
-                        Toast.makeText(MainActivity.this, "请先输入需要发送的消息内容", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, "请先获取需要发送的消息内容", Toast.LENGTH_LONG).show();
                         return;
                     }
                     if (phoneList != null && !phoneList.isEmpty()) {
                         AutoService.phoneList = phoneList;
                         openApp();
                     } else {
-                        Toast.makeText(MainActivity.this, "请先获取通讯录数据", Toast.LENGTH_LONG).show();
+                        Toast.makeText(mContext, "请先获取通讯录数据", Toast.LENGTH_LONG).show();
                     }
 
                 }
@@ -103,7 +112,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             btn_get_message.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    run("http://47.97.122.20:7012/qq/getSendMessage?sort=1401");
+                    String content = edit_send_message.getText().toString().trim();
+                    if (!TextUtils.isEmpty(content)) {
+                        run("http://47.97.122.20:7012/qq/getSendMessage?sort=" + content);
+                    } else {
+                        Toast.makeText(mContext, "请先输入要发送信息的sort", Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         }
@@ -131,6 +145,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     Log.e(TAG, "onResponse: " + message);
                     messageBean = JSON.parseObject(message, MessageBean.class);
                     Log.e(TAG, "onResponse: " + messageBean.getMessage());
+                    edit_send_message.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(mContext, "内容获取成功", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         });
@@ -172,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             //打开系统设置中辅助功能
             Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(intent);
-            Toast.makeText(MainActivity.this, "找到添加qq通讯录好友，然后开启服务即可", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "找到添加qq通讯录好友，然后开启服务即可", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -199,14 +219,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             , new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    setShowWindow(MainActivity.this, false);
+                                    setShowWindow(mContext, false);
                                     updateCheckBox(cb_window, false);
                                 }
                             })
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            setShowWindow(MainActivity.this, false);
+                            setShowWindow(mContext, false);
                             updateCheckBox(cb_window, false);
                         }
                     })
@@ -308,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     if (isAccessibilitySettingsOn()) {
                         AutoService.enableFunc = true;
                     } else {
-                        Toast.makeText(MainActivity.this, "辅助功能未开启", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, "辅助功能未开启", Toast.LENGTH_SHORT).show();
                         buttonView.setChecked(false);
                     }
                 } else {
@@ -341,7 +361,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private void methodRequiresTwoPermission() {
         String[] perms = {Manifest.permission.READ_CONTACTS};
         if (EasyPermissions.hasPermissions(this, perms)) {
-            phoneList = PhoneUtils.getAllPhone(MainActivity.this);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    phoneList = PhoneUtils.getAllPhone(mContext, new Handler(Looper.getMainLooper()));
+                }
+            }).start();
         } else {
             // Do not have permissions, request them now
             EasyPermissions.requestPermissions(this, "联系人权限未开启,请先在设置中打开联系人", 101, perms);
